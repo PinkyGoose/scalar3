@@ -1,0 +1,8 @@
+[package]
+name = "scalar3"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serialport = "4.6.0"
+eframe = "0.29.1"
