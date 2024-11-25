@@ -4,9 +4,14 @@ use crate::Regime;
 #[derive(Clone, Debug)]
 
 pub enum MessageFromUi {
-    SetPortSettings(SerialPortSettings),
+    OpenPort(SerialPortSettings),
+    ClosePort,
     SetRegime(Regime),
 }
 #[derive(Clone)]
 
-pub enum MessageToUi {}
+pub enum MessageToUi {
+    PortClosed,
+    PortOpened,
+    PortError(String),
+}

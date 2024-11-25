@@ -5,12 +5,16 @@ use std::fmt::Display;
 use std::time::Duration;
 use tokio::sync::broadcast::{Receiver, Sender};
 
+#[derive(Clone, Debug, Default)]
+pub struct SerialPortParams {
+    pub settings: SerialPortSettings,
+    pub opened: bool,
+}
 #[derive(Clone, Debug)]
 pub struct SerialPortSettings {
     pub interface: InterfaceSettings,
     pub baud_rate: u32,
     pub current_port: String,
-    pub open: bool,
 }
 #[derive(Default, PartialEq, Clone, Debug)]
 pub enum InterfaceSettings {
@@ -35,7 +39,6 @@ pub struct SerialP {
 impl Default for SerialPortSettings {
     fn default() -> Self {
         Self {
-            open: false,
             interface: Default::default(),
             baud_rate: 9600,
             current_port: available_ports()
@@ -50,24 +53,26 @@ impl Default for SerialPortSettings {
 
 pub fn render_port_settings(
     ui: &mut egui::Ui,
-    settings: &mut SerialPortSettings,
+    sp_params: &mut SerialPortParams,
     tx: Sender<MessageFromUi>,
+    mut rx: Receiver<MessageToUi>,
 ) {
+
     ui.heading("Настройки порта");
     ui.label("Настройте параметры подключения:");
 
     ui.horizontal(|ui| {
         ui.push_id("port_name", |ui| {
             ui.label("Выбранный порт:");
-            if settings.open {
+            if sp_params.opened {
                 ui.disable();
             }
             egui::ComboBox::from_label("")
-                .selected_text(settings.current_port.to_string()) // Преобразуем в строку
+                .selected_text(sp_params.settings.current_port.to_string()) // Преобразуем в строку
                 .show_ui(ui, |ui| {
                     for i in available_ports().unwrap() {
                         ui.selectable_value(
-                            &mut settings.current_port,
+                            &mut sp_params.settings.current_port,
                             i.port_name.clone(),
                             i.port_name.to_string(),
                         );
@@ -78,19 +83,19 @@ pub fn render_port_settings(
     ui.horizontal(|ui| {
         ui.push_id("interface", |ui| {
             ui.label("Интерфейс:");
-            if settings.open {
+            if sp_params.opened {
                 ui.disable();
             }
             egui::ComboBox::from_label("")
-                .selected_text(settings.interface.to_string()) // Преобразуем в строку
+                .selected_text(sp_params.settings.interface.to_string()) // Преобразуем в строку
                 .show_ui(ui, |ui| {
                     ui.selectable_value(
-                        &mut settings.interface,
+                        &mut sp_params.settings.interface,
                         InterfaceSettings::RS232,
                         InterfaceSettings::RS232.to_string(),
                     );
                     ui.selectable_value(
-                        &mut settings.interface,
+                        &mut sp_params.settings.interface,
                         InterfaceSettings::RS485,
                         InterfaceSettings::RS485.to_string(),
                     );
@@ -101,27 +106,29 @@ pub fn render_port_settings(
     ui.horizontal(|ui| {
         ui.push_id("baud", |ui| {
             ui.label("Скорость:");
-            if settings.open {
+            if sp_params.opened {
                 ui.disable();
             }
             egui::ComboBox::from_label("")
-                .selected_text(&settings.baud_rate.to_string())
+                .selected_text(&sp_params.settings.baud_rate.to_string())
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut settings.baud_rate, 9600, 9600.to_string());
-                    ui.selectable_value(&mut settings.baud_rate, 115200, 115200.to_string());
+                    ui.selectable_value(&mut sp_params.settings.baud_rate, 9600, 9600.to_string());
+                    ui.selectable_value(
+                        &mut sp_params.settings.baud_rate,
+                        115200,
+                        115200.to_string(),
+                    );
                 });
         })
     });
     ui.separator();
-    if settings.open {
+    if sp_params.opened {
         if ui.button("Закрыть").clicked() {
-            settings.open = false;
-            let _ = tx.send(MessageFromUi::SetPortSettings(settings.clone()));
+            let _ = tx.send(MessageFromUi::ClosePort);
         }
     } else {
         if ui.button("Открыть").clicked() {
-            settings.open = true;
-            let _ = tx.send(MessageFromUi::SetPortSettings(settings.clone()));
+            let _ = tx.send(MessageFromUi::OpenPort(sp_params.settings.clone()));
         }
     }
 }

@@ -48,21 +48,24 @@ pub async fn event_loop(
     while !stop_flag.load(Ordering::SeqCst) {
         if let Ok(msg) = rx.try_recv() {
             match msg {
-                MessageFromUi::SetPortSettings(sets) => {
-                    if sets.open {
-                        if let Ok(port) = serialport::new(&sets.current_port, sets.baud_rate)
-                            .timeout(Duration::from_secs(1))
-                            .open()
-                        {
-                            sp = Some(port);
-                            println!("Порт {} успешно открыт!", sets.current_port);
-                        } else {
-                            println!("Ошибка при открытии порта {}", sets.current_port);
-                        }
+                MessageFromUi::OpenPort(sets) => {
+                    if let Ok(port) = serialport::new(&sets.current_port, sets.baud_rate)
+                        .timeout(Duration::from_secs(1))
+                        .open()
+                    {
+                        sp = Some(port);
+                        println!("Порт {} успешно открыт!", sets.current_port);
+                        let _ = tx.send(MessageToUi::PortOpened);
                     } else {
-                        println!("Зануляем порт");
-                        sp = None;
+                        let _ = tx.send(MessageToUi::PortError(format!("Ошибка при открытии порта {}", sets.current_port)));
+                        println!("Ошибка при открытии порта {}", sets.current_port);
                     }
+                }
+                MessageFromUi::ClosePort => {
+                    println!("Зануляем порт");
+
+                    let _ = tx.send(MessageToUi::PortClosed);
+                    sp = None;
                 }
 
                 MessageFromUi::SetRegime(reg) => {
