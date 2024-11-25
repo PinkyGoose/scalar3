@@ -1,11 +1,18 @@
-use crate::ui::port_settings::{render_port_settings,  InterfaceSettings};
+use crate::messages::{MessageFromUi, MessageToUi};
+use crate::ui::bottom_board::render_bottom_tab;
+use crate::ui::bottom_board::BottomTab;
+use crate::ui::port_settings::render_port_settings;
+use crate::ui::port_settings::SerialPortSettings;
 use eframe::egui;
-use serialport::{SerialPort, SerialPortInfo};
+use serialport::{available_ports, SerialPort};
+use std::fmt::Display;
+use std::sync::Arc;
+use tokio::sync::broadcast::{Receiver, Sender};
 
-mod bottom_board;
-mod general_message;
-mod port_settings;
-mod upper_board;
+pub mod bottom_board;
+pub mod general_message;
+pub mod port_settings;
+pub mod upper_board;
 
 #[derive(PartialEq, Default)]
 enum Tab {
@@ -15,26 +22,28 @@ enum Tab {
     UpperBoard,
     General,
 }
-#[derive(Default)]
+
 pub struct Scalar3 {
     current_tab: Tab,
-    port_settings: SerialPortSettings,
+    serial_port_settings: SerialPortSettings,
+    tx: Sender<MessageFromUi>,
+    rx: Receiver<MessageToUi>,
+    bottom_tab: BottomTab,
 }
-pub struct SerialPortSettings {
-    interface: InterfaceSettings,
-    baud_rate: u32
-}
-impl Default for SerialPortSettings{
-    fn default() -> Self {
-        Self{
-            interface: Default::default(),
-            baud_rate: 9600,
-        }
-    }
-}
+
 impl Scalar3 {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::default()
+    pub fn new(
+        cc: &eframe::CreationContext<'_>,
+        tx: Sender<MessageFromUi>,
+        rx: Receiver<MessageToUi>,
+    ) -> Self {
+        Self {
+            rx,
+            tx,
+            serial_port_settings: SerialPortSettings::default(),
+            current_tab: Tab::default(),
+            bottom_tab: BottomTab::Temperature,
+        }
     }
 }
 
@@ -57,10 +66,14 @@ impl eframe::App for Scalar3 {
             });
 
             // Содержимое текущей вкладки
+
             ui.separator();
             match self.current_tab {
-                Tab::Port => render_port_settings(ui, &mut self.port_settings),
+                Tab::Port => {
+                    render_port_settings(ui, &mut self.serial_port_settings, self.tx.clone())
+                }
                 Tab::BottomBoard => {
+                    render_bottom_tab(ui);
                     ui.heading("Нижняя плата");
                     ui.label("Содержимое для нижней платы.");
                 }
