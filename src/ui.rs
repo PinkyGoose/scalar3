@@ -1,12 +1,8 @@
 use crate::messages::{MessageFromUi, MessageToUi};
 use crate::ui::bottom_board::render_bottom_tab;
 use crate::ui::bottom_board::BottomTab;
-use crate::ui::port_settings::SerialPortSettings;
 use crate::ui::port_settings::{render_port_settings, SerialPortParams};
 use eframe::egui;
-use serialport::{available_ports, SerialPort};
-use std::fmt::Display;
-use std::sync::Arc;
 use tokio::sync::broadcast::{Receiver, Sender};
 
 pub mod bottom_board;

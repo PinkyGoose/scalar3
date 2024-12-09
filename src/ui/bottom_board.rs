@@ -1,10 +1,7 @@
 mod voltage;
 
-use crate::messages::MessageFromUi;
-use crate::ui::port_settings::{render_port_settings, SerialPortSettings};
-use crate::ui::{Scalar3, Tab};
+use crate::ui::Scalar3;
 use eframe::egui;
-use tokio::sync::broadcast::Sender;
 
 #[derive(PartialEq, Default)]
 pub enum BottomTab {

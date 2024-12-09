@@ -2,7 +2,6 @@ use crate::messages::{MessageFromUi, MessageToUi};
 use eframe::egui;
 use serialport::{available_ports, SerialPort};
 use std::fmt::Display;
-use std::time::Duration;
 use tokio::sync::broadcast::{Receiver, Sender};
 
 #[derive(Clone, Debug, Default)]
@@ -55,7 +54,7 @@ pub fn render_port_settings(
     ui: &mut egui::Ui,
     sp_params: &mut SerialPortParams,
     tx: Sender<MessageFromUi>,
-    mut rx: Receiver<MessageToUi>,
+    rx: Receiver<MessageToUi>,
 ) {
     ui.heading("Настройки порта");
     ui.label("Настройте параметры подключения:");
@@ -109,7 +108,7 @@ pub fn render_port_settings(
                 ui.disable();
             }
             egui::ComboBox::from_label("")
-                .selected_text(&sp_params.settings.baud_rate.to_string())
+                .selected_text(sp_params.settings.baud_rate.to_string())
                 .show_ui(ui, |ui| {
                     ui.selectable_value(&mut sp_params.settings.baud_rate, 9600, 9600.to_string());
                     ui.selectable_value(
@@ -125,9 +124,7 @@ pub fn render_port_settings(
         if ui.button("Закрыть").clicked() {
             let _ = tx.send(MessageFromUi::ClosePort);
         }
-    } else {
-        if ui.button("Открыть").clicked() {
-            let _ = tx.send(MessageFromUi::OpenPort(sp_params.settings.clone()));
-        }
+    } else if ui.button("Открыть").clicked() {
+        let _ = tx.send(MessageFromUi::OpenPort(sp_params.settings.clone()));
     }
 }
