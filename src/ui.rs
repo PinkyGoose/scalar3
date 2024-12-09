@@ -29,7 +29,7 @@ pub struct Scalar3 {
     tx: Sender<MessageFromUi>,
     rx: Receiver<MessageToUi>,
     bottom_tab: BottomTab,
-    error: Option<String>
+    error: Option<String>,
 }
 // pub struct  ErrorMessageBox{
 //     message: String,
@@ -47,7 +47,7 @@ impl Scalar3 {
             serial_port_settings: SerialPortParams::default(),
             current_tab: Tab::default(),
             bottom_tab: BottomTab::Temperature,
-            error:None
+            error: None,
         }
     }
 }
@@ -62,7 +62,7 @@ impl eframe::App for Scalar3 {
                 MessageToUi::PortOpened => {
                     self.serial_port_settings.opened = true;
                 }
-                MessageToUi::PortError(error)=>{
+                MessageToUi::PortError(error) => {
                     println!("вроде должно вывестись сообщение");
                     self.serial_port_settings.opened = false;
                     self.error = Some(error);
@@ -74,7 +74,10 @@ impl eframe::App for Scalar3 {
                 .collapsible(false)
                 .resizable(false)
                 .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0]) // Центрируем окно
-                .frame(egui::Frame::popup(&ctx.style()).inner_margin(egui::Margin::symmetric(10.0, 10.0))) // Уменьшаем внутренние отступы
+                .frame(
+                    egui::Frame::popup(&ctx.style())
+                        .inner_margin(egui::Margin::symmetric(10.0, 10.0)),
+                ) // Уменьшаем внутренние отступы
                 .show(ctx, |ui| {
                     ui.vertical_centered(|ui| {
                         // Заголовок ошибки
@@ -127,9 +130,12 @@ impl eframe::App for Scalar3 {
 
                 ui.separator();
                 match self.current_tab {
-                    Tab::Port => {
-                        render_port_settings(ui, &mut self.serial_port_settings, self.tx.clone(), self.rx.resubscribe())
-                    }
+                    Tab::Port => render_port_settings(
+                        ui,
+                        &mut self.serial_port_settings,
+                        self.tx.clone(),
+                        self.rx.resubscribe(),
+                    ),
                     Tab::BottomBoard => {
                         render_bottom_tab(ui, self);
                         // ui.heading("Нижняя плата");

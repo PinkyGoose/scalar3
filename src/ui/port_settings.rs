@@ -57,7 +57,6 @@ pub fn render_port_settings(
     tx: Sender<MessageFromUi>,
     mut rx: Receiver<MessageToUi>,
 ) {
-
     ui.heading("Настройки порта");
     ui.label("Настройте параметры подключения:");
 

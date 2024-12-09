@@ -2,9 +2,9 @@ mod voltage;
 
 use crate::messages::MessageFromUi;
 use crate::ui::port_settings::{render_port_settings, SerialPortSettings};
+use crate::ui::{Scalar3, Tab};
 use eframe::egui;
 use tokio::sync::broadcast::Sender;
-use crate::ui::{Scalar3, Tab};
 
 #[derive(PartialEq, Default)]
 pub enum BottomTab {
@@ -24,8 +24,6 @@ pub fn render_bottom_tab(ui: &mut egui::Ui, scalar3: &mut Scalar3) {
         if ui.button("Напряжение").clicked() {
             scalar3.bottom_tab = BottomTab::Voltage;
         }
-
-
     });
     ui.separator();
     match scalar3.bottom_tab {

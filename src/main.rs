@@ -57,7 +57,10 @@ pub async fn event_loop(
                         println!("Порт {} успешно открыт!", sets.current_port);
                         let _ = tx.send(MessageToUi::PortOpened);
                     } else {
-                        let _ = tx.send(MessageToUi::PortError(format!("Ошибка при открытии порта {}", sets.current_port)));
+                        let _ = tx.send(MessageToUi::PortError(format!(
+                            "Ошибка при открытии порта {}",
+                            sets.current_port
+                        )));
                         println!("Ошибка при открытии порта {}", sets.current_port);
                     }
                 }
