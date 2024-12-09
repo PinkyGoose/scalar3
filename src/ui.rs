@@ -107,42 +107,59 @@ impl eframe::App for Scalar3 {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                if ui.button("Порт").clicked() {
-                    self.current_tab = Tab::Port;
-                }
-                if ui.button("Нижняя плата").clicked() {
-                    self.current_tab = Tab::BottomBoard;
-                }
-                if ui.button("Верхняя плата").clicked() {
-                    self.current_tab = Tab::UpperBoard;
-                }
-                if ui.button("Общие").clicked() {
-                    self.current_tab = Tab::General;
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("Порт").clicked() {
+                        self.current_tab = Tab::Port;
+                    }
+                    if ui.button("Нижняя плата").clicked() {
+                        self.current_tab = Tab::BottomBoard;
+                    }
+                    if ui.button("Верхняя плата").clicked() {
+                        self.current_tab = Tab::UpperBoard;
+                    }
+                    if ui.button("Общие").clicked() {
+                        self.current_tab = Tab::General;
+                    }
+                });
+
+                // Содержимое текущей вкладки
+
+                ui.separator();
+                match self.current_tab {
+                    Tab::Port => {
+                        render_port_settings(ui, &mut self.serial_port_settings, self.tx.clone(), self.rx.resubscribe())
+                    }
+                    Tab::BottomBoard => {
+                        render_bottom_tab(ui, self);
+                        // ui.heading("Нижняя плата");
+                        // ui.label("Содержимое для нижней платы.");
+                    }
+                    Tab::UpperBoard => {
+                        ui.heading("Верхняя плата");
+                        ui.label("Содержимое для верхней платы.");
+                    }
+                    Tab::General => {
+                        ui.heading("Общее сообщение");
+                        ui.label("Общие настройки приложения.");
+                    }
                 }
             });
-
-            // Содержимое текущей вкладки
-
-            ui.separator();
-            match self.current_tab {
-                Tab::Port => {
-                    render_port_settings(ui,  &mut self.serial_port_settings, self.tx.clone(), self.rx.resubscribe())
-                }
-                Tab::BottomBoard => {
-                    render_bottom_tab(ui);
-                    ui.heading("Нижняя плата");
-                    ui.label("Содержимое для нижней платы.");
-                }
-                Tab::UpperBoard => {
-                    ui.heading("Верхняя плата");
-                    ui.label("Содержимое для верхней платы.");
-                }
-                Tab::General => {
-                    ui.heading("Общее сообщение");
-                    ui.label("Общие настройки приложения.");
-                }
-            }
         });
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let le = 0.93_f32.to_le_bytes();
+        let be = 0.93_f32.to_be_bytes();
+        let ne = 0.93_f32.to_ne_bytes();
+        let le = String::from_utf8(Vec::from(le));
+        let be = String::from_utf8(Vec::from(be));
+        let ne = String::from_utf8(Vec::from(ne));
+        println!("le {le:?} be {be:?} ne {ne:?}");
     }
 }
